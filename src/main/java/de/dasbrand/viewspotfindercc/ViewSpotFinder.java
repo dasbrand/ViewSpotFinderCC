@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,25 +30,27 @@ public class ViewSpotFinder {
         return mapper.readValue(jsonFile, Input.class);
     }
 
-    public ArrayList<Integer> findViewSpots(int limit) {
+    public ArrayList<Integer> findViewSpots(int limit, TreeSet<ElementWithValue> elemsWithValue) {
         ArrayList<Integer> viewSpots = new ArrayList<>(limit);
-
-        Map<Integer, Double> elementIdToValueMap = createElementIdToValueMap();
-
-        TreeSet<ElementWithValue> elemsWithValue = createElemsWithValueOrderedSet(elementIdToValueMap);
-
-        HashSet<ElementWithValue> visitedElements = new HashSet<>();
+        HashSet<Integer> visitedNodeIds = new HashSet<>();
 
         Iterator<ElementWithValue> descIterator = elemsWithValue.descendingIterator();
         while (descIterator.hasNext()) {
             ElementWithValue elem = descIterator.next();
-            // since the set we iterate through has been ordered by value, we only need to check if an element does not neighbor any of the already visited elements
-            // for it to qualify as a view spot (because any unvisited element would have a smaller or equal value compared to this element)
-            if (doesNotNeighborVisitedElement(elem, visitedElements)) {
+            boolean isViewSpot = true;
+            // iterate through the nodes of the current element and mark them as visited
+            for (Integer nodeId : elem.getNodes()) {
+                // An element is a view spot if none of its nodes have already been marked (since having a marked node would
+                // imply a neighbor element with greater or equal value).
+                // Even if an element is not a view spot, it marks all of its nodes as visited (=> disqualified for a view spot),
+                // because it still disqualifies neighbors from being a view spot solely by being a neighbor with a greater value.
+                if (!visitedNodeIds.add(nodeId)) {
+                    isViewSpot = false;
+                }
+            }
+            if (isViewSpot) {
                 viewSpots.add(elem.getId());
             }
-
-            visitedElements.add(elem);
             if (viewSpots.size() == limit) {
                 return viewSpots;
             }
@@ -58,26 +59,8 @@ public class ViewSpotFinder {
         return viewSpots;
     }
 
-    private boolean doesNotNeighborVisitedElement(ElementWithValue elem, Set<ElementWithValue> visitedElements) {
-        for (ElementWithValue visitedElem : visitedElements) {
-            if (isNeighbor(elem, visitedElem)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean isNeighbor(ElementWithValue elem, ElementWithValue visitedElem) {
-        List<Integer> visitedElemNodeIds = visitedElem.getNodes();
-        for (Integer id : elem.getNodes()) {
-            if (visitedElemNodeIds.contains(id)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private TreeSet<ElementWithValue> createElemsWithValueOrderedSet(Map<Integer, Double> elementIdToValueMap) {
+    public TreeSet<ElementWithValue> createElemsWithValueOrderedSet() {
+        Map<Integer, Double> elementIdToValueMap = createElementIdToValueMap();
         List<Element> elems = input.getElements();
         TreeSet<ElementWithValue> ret = new TreeSet<>();
 
