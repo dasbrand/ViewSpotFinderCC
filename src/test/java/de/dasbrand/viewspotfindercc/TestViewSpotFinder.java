@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import de.dasbrand.viewspotfindercc.json.Input;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
@@ -37,7 +38,7 @@ public class TestViewSpotFinder {
         Path inputFilePath = Paths.get("src", "test", "resources", "mesh_simple.json");
         ViewSpotFinder testFinder = new ViewSpotFinder(inputFilePath.toFile());
         TreeSet<ElementWithValue> elemsWithValue = testFinder.createElemsWithValueOrderedSet();
-        ArrayList<Integer> viewsSpots = testFinder.findViewSpots(5000, elemsWithValue);
+        ArrayList<ElementWithValue> viewsSpots = testFinder.findViewSpots(5000, elemsWithValue);
 
         assertCorrectness(elemsWithValue, viewsSpots);
     }
@@ -47,7 +48,7 @@ public class TestViewSpotFinder {
         Path inputFilePath = Paths.get("src", "test", "resources", "mesh_10000.json");
         ViewSpotFinder testFinder = new ViewSpotFinder(inputFilePath.toFile());
         TreeSet<ElementWithValue> elemsWithValue = testFinder.createElemsWithValueOrderedSet();
-        ArrayList<Integer> viewsSpots = testFinder.findViewSpots(10000, elemsWithValue);
+        ArrayList<ElementWithValue> viewsSpots = testFinder.findViewSpots(10000, elemsWithValue);
 
         assertCorrectness(elemsWithValue, viewsSpots);
     }
@@ -57,16 +58,16 @@ public class TestViewSpotFinder {
         Path inputFilePath = Paths.get("src", "test", "resources", "mesh_20000.json");
         ViewSpotFinder testFinder = new ViewSpotFinder(inputFilePath.toFile());
         TreeSet<ElementWithValue> elemsWithValue = testFinder.createElemsWithValueOrderedSet();
-        ArrayList<Integer> viewsSpots = testFinder.findViewSpots(20000, elemsWithValue);
+        ArrayList<ElementWithValue> viewsSpots = testFinder.findViewSpots(20000, elemsWithValue);
 
         assertCorrectness(elemsWithValue, viewsSpots);
     }
 
-    private void assertCorrectness(TreeSet<ElementWithValue> elemsWithValue, ArrayList<Integer> viewsSpots) {
+    private void assertCorrectness(TreeSet<ElementWithValue> elemsWithValue, ArrayList<ElementWithValue> viewsSpots) {
         // assert correctness using naive full iterations ignoring performance
         for (ElementWithValue elem : elemsWithValue) {
             double elemValue = elem.getValue();
-            if (viewsSpots.contains(elem.getId())) {
+            if (viewsSpots.contains(elem)) {
                 // if an element is a viewspot, it may not share a node with an element that has a higher value
                 assertThat(elemsWithValue).allSatisfy(otherElem -> {
                     for (Integer nodeId : elem.getNodes()) {
@@ -95,6 +96,7 @@ public class TestViewSpotFinder {
     }
 
     @Test
+    @Disabled
     public void runBenchmarks() throws Exception {
         Options options = new OptionsBuilder()
                 .include(this.getClass().getName() + ".*")
@@ -117,7 +119,7 @@ public class TestViewSpotFinder {
         Path inputFilePath = Paths.get("src", "test", "resources", "mesh_simple.json");
         ViewSpotFinder testFinder = new ViewSpotFinder(inputFilePath.toFile());
         TreeSet<ElementWithValue> elemsWithValue = testFinder.createElemsWithValueOrderedSet();
-        ArrayList<Integer> viewsSpots = testFinder.findViewSpots(5000, elemsWithValue);
+        ArrayList<ElementWithValue> viewsSpots = testFinder.findViewSpots(5000, elemsWithValue);
     }
 
     @Benchmark
@@ -126,7 +128,7 @@ public class TestViewSpotFinder {
         Path inputFilePath = Paths.get("src", "test", "resources", "mesh_10000.json");
         ViewSpotFinder testFinder = new ViewSpotFinder(inputFilePath.toFile());
         TreeSet<ElementWithValue> elemsWithValue = testFinder.createElemsWithValueOrderedSet();
-        ArrayList<Integer> viewsSpots = testFinder.findViewSpots(10000, elemsWithValue);
+        ArrayList<ElementWithValue> viewsSpots = testFinder.findViewSpots(10000, elemsWithValue);
     }
 
     @Benchmark
@@ -135,6 +137,6 @@ public class TestViewSpotFinder {
         Path inputFilePath = Paths.get("src", "test", "resources", "mesh_20000.json");
         ViewSpotFinder testFinder = new ViewSpotFinder(inputFilePath.toFile());
         TreeSet<ElementWithValue> elemsWithValue = testFinder.createElemsWithValueOrderedSet();
-        ArrayList<Integer> viewsSpots = testFinder.findViewSpots(20000, elemsWithValue);
+        ArrayList<ElementWithValue> viewsSpots = testFinder.findViewSpots(20000, elemsWithValue);
     }
 }

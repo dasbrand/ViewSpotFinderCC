@@ -22,4 +22,9 @@ public class ElementWithValue implements Comparable<ElementWithValue> {
             return -1;
         }
     }
+
+    @Override
+    public String toString() {
+        return "{element_id: " + id + ", value: " + value + "}";
+    }
 }

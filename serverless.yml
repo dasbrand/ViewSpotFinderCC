@@ -1,0 +1,12 @@
+service: sls-aws-spring-cloud-function
+provider:
+  name: aws
+  runtime: java11
+  timeout: 300
+package:
+  artifact: ViewSpotFinder.jar
+functions:
+  findViewSpots:
+    handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker
+    environment:
+      SPRING_CLOUD_FUNCTION_DEFINITION: findViewSpots

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.dasbrand.viewspotfindercc.json.Element;
 import de.dasbrand.viewspotfindercc.json.Input;
@@ -25,13 +26,18 @@ public class ViewSpotFinder {
         this.input = parseJson(jsonFile);
     }
 
+    public ViewSpotFinder(String json) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        this.input = mapper.readValue(json, Input.class);
+    }
+
     public Input parseJson(File jsonFile) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(jsonFile, Input.class);
     }
 
-    public ArrayList<Integer> findViewSpots(int limit, TreeSet<ElementWithValue> elemsWithValue) {
-        ArrayList<Integer> viewSpots = new ArrayList<>(limit);
+    public ArrayList<ElementWithValue> findViewSpots(int limit, TreeSet<ElementWithValue> elemsWithValue) {
+        ArrayList<ElementWithValue> viewSpots = new ArrayList<>(limit);
         HashSet<Integer> visitedNodeIds = new HashSet<>();
 
         Iterator<ElementWithValue> descIterator = elemsWithValue.descendingIterator();
@@ -49,9 +55,9 @@ public class ViewSpotFinder {
                 }
             }
             if (isViewSpot) {
-                viewSpots.add(elem.getId());
+                viewSpots.add(elem);
             }
-            if (viewSpots.size() == limit) {
+            if (limit != 0 && viewSpots.size() == limit) {
                 return viewSpots;
             }
         }
@@ -78,5 +84,19 @@ public class ViewSpotFinder {
             ret.put(val.getElement_id(), val.getValue());
         }
         return ret;
+    }
+
+    public String formatViewSpots(ArrayList<ElementWithValue> viewsSpots) {
+        StringBuilder sb = new StringBuilder("[\n");
+        for (ElementWithValue vs : viewsSpots) {
+            sb.append("\t").append(vs.toString());
+            if (viewsSpots.indexOf(vs) < viewsSpots.size() - 1) {
+                sb.append(",\n");
+            } else {
+                sb.append("\n");
+            }
+        }
+        sb.append("]");
+        return sb.toString();
     }
 }

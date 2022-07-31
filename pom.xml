@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project
-        xmlns="http://maven.apache.org/POM/4.0.0"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>
         4.0.0
     </modelVersion>
@@ -40,6 +38,9 @@
         <spring-cloud.version>
             2021.0.3
         </spring-cloud.version>
+        <wrapper.version>
+            1.0.27.RELEASE
+        </wrapper.version>
     </properties>
     <dependencies>
         <dependency>
@@ -58,6 +59,16 @@
                 spring-cloud-function-context
             </artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>
+                org.springframework.cloud
+            </groupId>
+            <artifactId>
+                spring-cloud-function-adapter-aws
+            </artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>
@@ -121,6 +132,9 @@
     </dependencyManagement>
 
     <build>
+        <finalName>
+            ${project.artifactId}
+        </finalName>
         <plugins>
             <plugin>
                 <groupId>
@@ -129,17 +143,37 @@
                 <artifactId>
                     spring-boot-maven-plugin
                 </artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>
+                            org.springframework.boot.experimental
+                        </groupId>
+                        <artifactId>
+                            spring-boot-thin-layout
+                        </artifactId>
+                        <version>
+                            ${wrapper.version}
+                        </version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>
+                    org.apache.maven.plugins
+                </groupId>
+                <artifactId>
+                    maven-shade-plugin
+                </artifactId>
                 <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>
-                                org.projectlombok
-                            </groupId>
-                            <artifactId>
-                                lombok
-                            </artifactId>
-                        </exclude>
-                    </excludes>
+                    <createDependencyReducedPom>
+                        false
+                    </createDependencyReducedPom>
+                    <shadedArtifactAttached>
+                        true
+                    </shadedArtifactAttached>
+                    <shadedClassifierName>
+                        shaded
+                    </shadedClassifierName>
                 </configuration>
             </plugin>
         </plugins>
