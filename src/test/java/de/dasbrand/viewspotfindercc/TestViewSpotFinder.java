@@ -1,12 +1,5 @@
 package de.dasbrand.viewspotfindercc;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.TreeSet;
-import java.util.concurrent.TimeUnit;
-
 import de.dasbrand.viewspotfindercc.json.Input;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -18,6 +11,13 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

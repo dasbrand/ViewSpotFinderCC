@@ -1,21 +1,15 @@
 package de.dasbrand.viewspotfindercc;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.dasbrand.viewspotfindercc.json.Element;
 import de.dasbrand.viewspotfindercc.json.Input;
 import de.dasbrand.viewspotfindercc.json.Value;
 import lombok.Getter;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 public class ViewSpotFinder {
 
@@ -38,24 +32,46 @@ public class ViewSpotFinder {
 
     public ArrayList<ElementWithValue> findViewSpots(int limit, TreeSet<ElementWithValue> elemsWithValue) {
         ArrayList<ElementWithValue> viewSpots = new ArrayList<>(limit);
-        HashSet<Integer> visitedNodeIds = new HashSet<>();
+        HashMap<Integer, Double> visitedNodeToValueMap = new HashMap<>();
 
         Iterator<ElementWithValue> descIterator = elemsWithValue.descendingIterator();
         while (descIterator.hasNext()) {
             ElementWithValue elem = descIterator.next();
             boolean isViewSpot = true;
-            // iterate through the nodes of the current element and mark them as visited
+            // Rationale:
+            // An element is a view spot if none of its nodes have already been marked (since having a marked node would
+            // imply a neighbor element with greater or equal value).
+            // Even if an element is not a view spot, it marks all of its nodes as visited (=> disqualified for a view spot),
+            // because it still disqualifies neighbors from being a view spot solely by being a neighbor with a greater value.
+            double elemValue = elem.getValue();
             for (Integer nodeId : elem.getNodes()) {
-                // An element is a view spot if none of its nodes have already been marked (since having a marked node would
-                // imply a neighbor element with greater or equal value).
-                // Even if an element is not a view spot, it marks all of its nodes as visited (=> disqualified for a view spot),
-                // because it still disqualifies neighbors from being a view spot solely by being a neighbor with a greater value.
-                if (!visitedNodeIds.add(nodeId)) {
-                    isViewSpot = false;
+                // For most cases, the rationale above could be realised with a set. However, for the edge case that:
+                //  - there are multiple elements with the same value
+                //  - one of them is a view spot
+                //  - the elements of the same value share a node
+                //  - and (most importantly) the view spot is not the first element (of the same value) we iterate through
+                // we would miss the view spot. To avoid this error, we use a Map which not only notes the visited node ids
+                // as keys but also notes the corresponding element values as values. If we do find a view spot, we
+                // update all the node ids connected to the element in the map and add 1 (or another arbitrary number > 0)
+                // to the entry's value. Accordingly, once we check whether a node id is already in the map and thus
+                // might disqualify the current node from being a view spot, it only actually disqualifies it if the
+                // value from the map is greater than the current element's value (since in that case it is either an
+                // "actual" greater element value or the value of an element that has been given a bonus value of 1
+                // to block all equal values from qualifying as view spot according to the requirement that there
+                // may only be 1 view spot of the same value).
+                if (visitedNodeToValueMap.containsKey(nodeId)) {
+                    if (visitedNodeToValueMap.get(nodeId) > elemValue) {
+                        isViewSpot = false;
+                    }
+                } else {
+                    visitedNodeToValueMap.put(nodeId, elemValue);
                 }
             }
             if (isViewSpot) {
                 viewSpots.add(elem);
+                for (Integer nodeId : elem.getNodes()) {
+                    visitedNodeToValueMap.put(nodeId, elemValue + 1);
+                }
             }
             if (limit != 0 && viewSpots.size() == limit) {
                 return viewSpots;
